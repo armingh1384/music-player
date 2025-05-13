@@ -1,4 +1,4 @@
-public  class PlayList {
+public class PlayList {
     private int size;
     private Song[] songs;
     private int control = 0;
@@ -7,7 +7,6 @@ public  class PlayList {
         this.size = size;
         this.songs = new Song[size];
     }
-
 
     public Song[] getSongs() {
         return songs;
@@ -32,7 +31,6 @@ public  class PlayList {
     public boolean removeSong(Song song) {
         for (int i = 0; i < control; i++) {
             if (songs[i] != null && songs[i].equals(song)) {
-
                 for (int j = i; j < control - 1; j++) {
                     songs[j] = songs[j + 1];
                 }
@@ -61,9 +59,6 @@ public  class PlayList {
                 data[index++] = collector.get(song);
             }
         }
-
         return data;
     }
-
-
 }
