@@ -1,3 +1,3 @@
 public enum Genre {
-    pop,phonk,rock,sonati,classic
+    pop,phonk,rock,sonati,classic,UNKNOWN
 }

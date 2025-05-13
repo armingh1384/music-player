@@ -2,12 +2,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 public class Musiccenter {
-    private Song[] playlist;
+    private List<Song> playlist;
     private int currentIndex = 0;
     private PlaybackState playbackState = PlaybackState.STOPPED;
     private Song currentSong = null;
+    private boolean isShuffle = false;
+    private boolean isRepeat = false;
 
     private enum PlaybackState {
         PLAYING,
@@ -15,12 +19,21 @@ public class Musiccenter {
         STOPPED
     }
 
-    public Musiccenter(Song[] playlist) {
-        this.playlist = playlist;
-        if (playlist != null && playlist.length > 0) {
-            this.currentSong = playlist[0];
-        }
+
+    public Musiccenter(List<Song> playlist) {
+        setPlaylist(playlist);
     }
+
+
+    public void setPlaylist(List<Song> playlist) {
+        if (playlist == null || playlist.isEmpty()) {
+            throw new IllegalArgumentException("Playlist cannot be null or empty.");
+        }
+        this.playlist = playlist;
+        this.currentSong = playlist.get(0);
+        this.currentIndex = 0;
+    }
+
 
     public void play() {
         if (currentSong == null) {
@@ -31,6 +44,7 @@ public class Musiccenter {
         System.out.println("Playing song: " + currentSong.getName());
     }
 
+
     public void stop() {
         if (playbackState == PlaybackState.PLAYING || playbackState == PlaybackState.PAUSED) {
             playbackState = PlaybackState.STOPPED;
@@ -39,6 +53,7 @@ public class Musiccenter {
             System.out.println("No song is playing.");
         }
     }
+
 
     public void pause() {
         if (playbackState == PlaybackState.PLAYING) {
@@ -49,22 +64,65 @@ public class Musiccenter {
         }
     }
 
-    public void playnext() {
-        if (playlist == null || playlist.length == 0) {
+
+    public void playNext() {
+        if (playlist == null || playlist.isEmpty()) {
             System.out.println("Playlist is empty.");
             return;
         }
-        currentIndex++;
-        if (currentIndex >= playlist.length) {
-            System.out.println("End of playlist reached.");
-            currentSong = null;
-            playbackState = PlaybackState.STOPPED;
-            return;
+        if (isShuffle) {
+            currentIndex = (int) (Math.random() * playlist.size());
+        } else {
+            currentIndex++;
+            if (currentIndex >= playlist.size()) {
+                if (isRepeat) {
+                    currentIndex = 0;
+                } else {
+                    System.out.println("End of playlist reached.");
+                    currentSong = null;
+                    playbackState = PlaybackState.STOPPED;
+                    return;
+                }
+            }
         }
-        currentSong = playlist[currentIndex];
+        currentSong = playlist.get(currentIndex);
         playbackState = PlaybackState.PLAYING;
         System.out.println("Playing next song: " + currentSong.getName());
     }
+
+
+    public void playPrevious() {
+        if (playlist == null || playlist.isEmpty()) {
+            System.out.println("Playlist is empty.");
+            return;
+        }
+        currentIndex--;
+        if (currentIndex < 0) {
+            if (isRepeat) {
+                currentIndex = playlist.size() - 1;
+            } else {
+                System.out.println("Start of playlist reached.");
+                currentIndex = 0;
+                return;
+            }
+        }
+        currentSong = playlist.get(currentIndex);
+        playbackState = PlaybackState.PLAYING;
+        System.out.println("Playing previous song: " + currentSong.getName());
+    }
+
+
+    public void toggleShuffle() {
+        isShuffle = !isShuffle;
+        System.out.println("Shuffle mode: " + (isShuffle ? "ON" : "OFF"));
+    }
+
+
+    public void toggleRepeat() {
+        isRepeat = !isRepeat;
+        System.out.println("Repeat mode: " + (isRepeat ? "ON" : "OFF"));
+    }
+
 
     public void download(String targetDir) {
         if (currentSong == null) {
@@ -72,7 +130,7 @@ public class Musiccenter {
             return;
         }
 
-        String sourcePath = currentSong.getFilePath();
+        String sourcePath = currentSong.getMusicPath();
         if (sourcePath == null || sourcePath.isEmpty()) {
             System.out.println("Current song does not have a valid file path.");
             return;
@@ -113,6 +171,7 @@ public class Musiccenter {
             System.out.println("Error occurred while downloading: " + e.getMessage());
         }
     }
+
 
     public Song getCurrentSong() {
         return currentSong;

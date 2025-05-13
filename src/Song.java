@@ -1,122 +1,165 @@
 import java.io.File;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 public class Song {
-    String name;
+    private String name;
+    private String album;
+    private String artist;
+    private String musicPath;
+    private File musicFile;
+    private int releaseYear;
+    private Genre genre;
+    private String lyrics;
+    private int countOfLikes;
+    private boolean isLiked;
+    private int durationPlayed;
+    private LocalDateTime addedTime;
+
+    public Song(LocalDateTime addedTime, Genre genre, String lyrics, int releaseYear, File musicFile, String musicPath, int durationPlayed, String artist, String album, String name) {
+        this.addedTime = addedTime;
+        this.genre = genre;
+        this.lyrics = lyrics;
+        this.releaseYear = releaseYear > 0 ? releaseYear : 2023;
+        this.musicFile = musicFile;
+        this.musicPath = musicPath;
+        this.durationPlayed = Math.max(durationPlayed, 0);
+        this.artist = artist;
+        this.album = album;
+        this.name = name;
+    }
+
+
+    public Song() {
+        this.addedTime = LocalDateTime.now();
+        this.genre = Genre.UNKNOWN;
+        this.lyrics = "";
+        this.releaseYear = 2023;
+        this.musicFile = null;
+        this.musicPath = "";
+        this.durationPlayed = 0;
+        this.artist = "";
+        this.album = "";
+        this.name = "";
+    }
+
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name;
+        }
+    }
+
+    public String getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(String album) {
+        if (album != null && !album.trim().isEmpty()) {
+            this.album = album;
+        }
+    }
+
+    public String getArtist() {
+        return artist;
+    }
 
     public void setArtist(String artist) {
-        this.artist = artist;
+        if (artist != null && !artist.trim().isEmpty()) {
+            this.artist = artist;
+        }
     }
 
     public String getMusicPath() {
         return musicPath;
     }
 
-    public boolean isIsliked() {
-        return isliked;
-    }
-
-    public int getCountoflikes() {
-        return countoflikes;
-    }
-
-    public String getLyrics() {
-        return lyrics;
+    public void setMusicPath(String musicPath) {
+        if (musicPath != null && !musicPath.trim().isEmpty()) {
+            this.musicPath = musicPath;
+        }
     }
 
     public File getMusicFile() {
         return musicFile;
     }
 
-    public LocalDateTime getAdded_time() {
-        return added_time;
+    public void setMusicFile(File musicFile) {
+        this.musicFile = musicFile;
     }
 
-    public void setAdded_time(LocalDateTime added_time) {
-        this.added_time = added_time;
+    public int getReleaseYear() {
+        return releaseYear;
     }
 
-    public void setIsliked(boolean isliked) {
-        this.isliked = isliked;
+    public void setReleaseYear(int releaseYear) {
+        if (releaseYear > 0) {
+            this.releaseYear = releaseYear;
+        }
     }
 
-    public void setCountoflikes(int countoflikes) {
-        this.countoflikes = countoflikes;
-    }
-
-    public void setLyrics(String lyrics) {
-        this.lyrics = lyrics;
+    public Genre getGenre() {
+        return genre;
     }
 
     public void setGenre(Genre genre) {
         this.genre = genre;
     }
 
-    public void setReleaseYear(int releaseYear) {
-        this.releaseYear = releaseYear;
+    public String getLyrics() {
+        return lyrics;
     }
 
-    public void setMusicFile(File musicFile) {
-        this.musicFile = musicFile;
+    public void setLyrics(String lyrics) {
+        this.lyrics = lyrics;
     }
 
-    public void setMusicPath( String musicPath) {
-        this.musicPath = musicPath;
+    public int getCountOfLikes() {
+        return countOfLikes;
     }
 
-    public void setDuration_played(int duration_played) {
-        this.duration_played = duration_played;
+    public void setCountOfLikes(int countOfLikes) {
+        if (countOfLikes >= 0) {
+            this.countOfLikes = countOfLikes;
+        }
     }
 
-    public void setAlbum(String album) {
-        this.album = album;
+    public boolean isLiked() {
+        return isLiked;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLiked(boolean isLiked) {
+        this.isLiked = isLiked;
     }
 
-    public int getDuration_played() {
-        return duration_played;
+    public int getDurationPlayed() {
+        return durationPlayed;
     }
 
-    String album;
-    String artist;
-    int duration_played;
-    String musicPath;
-    File musicFile;
-    int releaseYear;
-    Genre genre;
-    String lyrics;
-    int countoflikes;
-
-boolean isliked;
-    LocalDateTime added_time;
-    public int getReleaseYear() {
-        return releaseYear;
-    }
-    public String getAlbum() {
-        return album;
-    }
-public String getArtist() {
-        return artist;
-}
-public Genre getGenre() {
-        return genre;
-}
-public String getFilepath() {
-        return musicPath;
-}
-public String getName() {
-        return name;
-}
-
-    public String getFilePath() {
-        return musicPath;
+    public void setDurationPlayed(int durationPlayed) {
+        if (durationPlayed >= 0) {
+            this.durationPlayed = durationPlayed;
+        }
     }
 
-    String getdetails(Song song) {
-        return "";
+    public LocalDateTime getAddedTime() {
+        return addedTime;
+    }
+
+    public void setAddedTime(LocalDateTime addedTime) {
+        this.addedTime = addedTime;
+    }
+
+
+    public String getDetails() {
+        return String.format("Name: %s, Artist: %s, Album: %s, Genre: %s, Release Year: %d", name, artist, album, genre, releaseYear);
+    }
+
+    @Override
+    public String toString() {
+        return getDetails();
     }
 }
