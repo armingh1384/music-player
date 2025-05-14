@@ -7,7 +7,7 @@ public class FilterByAlbum extends Filter {
 
     public boolean accept(Song song) {
         String Album = song.getAlbum();
-        for (String a : Albums) {
+        for (String a: Albums) {
             if (Album.equals(a)) {
                 return true;
             }
