@@ -124,53 +124,53 @@ public class Musiccenter {
     }
 
 
-    public void download(String targetDir) {
-        if (currentSong == null) {
-            System.out.println("No song selected to download.");
-            return;
-        }
+  //  public void download(String targetDir) {
+      //  if (currentSong == null) {
+    //   System.out.println("No song selected to download.");
+    //  return;
+    //   }
 
-        String sourcePath = currentSong.getMusicPath();
-        if (sourcePath == null || sourcePath.isEmpty()) {
-            System.out.println("Current song does not have a valid file path.");
-            return;
-        }
+    //  String sourcePath = currentSong.getMusicPath();
+    //  if (sourcePath == null || sourcePath.isEmpty()) {
+    //  System.out.println("Current song does not have a valid file path.");
+    //   return;
+    //  }
 
-        File sourceFile = new File(sourcePath);
-        if (!sourceFile.exists()) {
-            System.out.println("Source file does not exist: " + sourcePath);
-            return;
-        }
+    //   File sourceFile = new File(sourcePath);
+    //  if (!sourceFile.exists()) {
+    //  System.out.println("Source file does not exist: " + sourcePath);
+    // return;
+    // }
 
-        File targetDirectory = new File(targetDir);
-        if (!targetDirectory.exists()) {
-            boolean created = targetDirectory.mkdirs();
-            if (!created) {
-                System.out.println("Failed to create target directory: " + targetDir);
-                return;
-            }
-        }
+    //  File targetDirectory = new File(targetDir);
+    // if (!targetDirectory.exists()) {
+    //  boolean created = targetDirectory.mkdirs();
+    //  if (!created) {
+    //   System.out.println("Failed to create target directory: " + targetDir);
+    //   return;
+    //}
+    // }
 
-        File targetFile = new File(targetDirectory, sourceFile.getName());
+    // File targetFile = new File(targetDirectory, sourceFile.getName());
 
-        try (FileInputStream inputStream = new FileInputStream(sourceFile);
-             FileOutputStream outputStream = new FileOutputStream(targetFile)) {
+    //  try (FileInputStream inputStream = new FileInputStream(sourceFile);
+    //    FileOutputStream outputStream = new FileOutputStream(targetFile)) {
 
-            byte[] buffer = new byte[4096];
-            int bytesRead;
+    //  byte[] buffer = new byte[4096];
+    //  int bytesRead;
 
-            System.out.println("Downloading song: " + currentSong.getName());
+    //   System.out.println("Downloading song: " + currentSong.getName());
 
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
+    //   while ((bytesRead = inputStream.read(buffer)) != -1) {
+    //       outputStream.write(buffer, 0, bytesRead);
+    //    }
 
-            System.out.println("Download complete. Saved to: " + targetFile.getAbsolutePath());
+    //    System.out.println("Download complete. Saved to: " + targetFile.getAbsolutePath());
 
-        } catch (IOException e) {
-            System.out.println("Error occurred while downloading: " + e.getMessage());
-        }
-    }
+    //   } catch (IOException e) {
+    //      System.out.println("Error occurred while downloading: " + e.getMessage());
+    //   }
+    // }
 
 
     public Song getCurrentSong() {

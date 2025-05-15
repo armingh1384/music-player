@@ -8,5 +8,8 @@ public class Admin {
     void removeUser(User user){
         users.remove(user);
     }
+    void addUser(User user){
+        users.add(user);
+    }
 
 }
