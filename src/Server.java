@@ -20,10 +20,13 @@ public class Server {
                         Gson gson = new Gson();
                         Request request = gson.fromJson(message, Request.class);
 
-                        String response= "done" ;
+                        Response response = new Response();
+                        response.setStatus("ok");
+                        response.setMessage("received");
+                        response.setSong(request.getSong());
 
-
-                        out.write(response);
+                        String jsonResponse = gson.toJson(response);
+                        out.write(jsonResponse);
                         out.newLine();
                         out.flush();
 

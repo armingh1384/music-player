@@ -1,4 +1,11 @@
+public class Request {
+    private Song song;
 
-public class Request { public String action;
-        Song song;
+    public Song getSong() {
+        return song;
+    }
+
+    public void setSong(Song song) {
+        this.song = song;
+    }
 }
