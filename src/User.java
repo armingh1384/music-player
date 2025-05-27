@@ -28,6 +28,7 @@ public class User {
     public String getUsername() {
         return username;
     }
+    public String getPassword() {return password;}
 
     public void setUsername(String username) {
         if (username == null || username.isEmpty()) {
