@@ -1,7 +1,18 @@
+import java.util.Map;
+
 public class Response {
     private String status;
     private String message;
-    private Song song;
+    private Map<String, Object> data;
+
+    public Response() {
+    }
+
+    public Response(String status, String message, Map<String, Object> data) {
+        this.status = status;
+        this.message = message;
+        this.data = data;
+    }
 
     public String getStatus() {
         return status;
@@ -19,11 +30,11 @@ public class Response {
         this.message = message;
     }
 
-    public Song getSong() {
-        return song;
+    public Map<String, Object> getData() {
+        return data;
     }
 
-    public void setSong(Song song) {
-        this.song = song;
+    public void setData(Map<String, Object> data) {
+        this.data = data;
     }
 }
