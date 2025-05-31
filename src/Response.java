@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.Map;
 
 public class Response {
@@ -34,7 +35,11 @@ public class Response {
         return data;
     }
 
-    public void setData(Map<String, Object> data) {
-        this.data = data;
+    public void setData(String key, Object value) {
+        if (this.data == null) {
+            this.data = new HashMap<>();
+        }
+        this.data.put(key, value);
     }
+
 }
