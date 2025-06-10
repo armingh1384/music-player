@@ -5,10 +5,12 @@ import com.google.gson.Gson;
 public class Server {
     public static void main(String[] args) {
         try {
-            ServerSocket serverSocket = new ServerSocket(12345);
+            ServerSocket serverSocket = new ServerSocket(10384);
 
             while (true) {
+                System.out.println("waiting to connect");
                 Socket clientSocket = serverSocket.accept();
+                System.out.println("connected");
 
                 new Thread(() -> {
                     try {
@@ -19,6 +21,14 @@ public class Server {
 
                         Gson gson = new Gson();
                         Request request = gson.fromJson(message, Request.class);
+                        System.out.println("Received request: " + request);
+                        System.out.println("RequestType: " + request.getRequestType());
+                        System.out.println("Action: " + request.getAction());
+                        System.out.println("Data: " + request.getData());
+
+                        if (request == null) {
+                            System.out.println("request is null!");
+                        }
 
                         Response response = new RequestHandler().handle(request);
                         response.setStatus("ok");

@@ -9,6 +9,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="project" />
     <orderEntry type="library" name="Dart Packages" level="project" />
-    <orderEntry type="library" name="gson-2.10.1" level="project" />
+    <orderEntry type="library" exported="" name="gson-2.10.1" level="project" />
+    <orderEntry type="library" name="gson-2.10.2" level="project" />
+    <orderEntry type="library" name="json-20240303" level="project" />
   </component>
 </module>

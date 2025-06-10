@@ -9,14 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Database {
+
+    private static final Database instance = new Database();
+
+    private final Gson gson;
     private List<Song> songs;
     private List<User> users;
-    private final Gson gson;
 
     private static final String USERS_FILE = "users.json";
     private static final String SONGS_FILE = "songs.json";
 
-    public Database() {
+    private Database() {
         gson = new Gson();
         songs = new ArrayList<>();
         users = new ArrayList<>();
@@ -24,35 +27,54 @@ public class Database {
         loadSongs();
     }
 
-    public void addUser(User user) {
+    public static Database getInstance() {
+        return instance;
+    }
+
+    public synchronized void addUser(User user) {
         users.add(user);
         saveUsers();
     }
 
-    public void removeUser(User user) {
+    public synchronized void removeUser(User user) {
         users.remove(user);
         saveUsers();
     }
 
-    public void addSong(Song song) {
+    public synchronized void addSong(Song song) {
         songs.add(song);
         saveSongs();
     }
 
-    public void removeSong(Song song) {
+    public synchronized void removeSong(Song song) {
         songs.remove(song);
         saveSongs();
     }
 
-    public List<User> getUsers() {
-        return users;
+    public synchronized boolean usernameExists(String username) {
+        return users.stream().anyMatch(u -> u.getUsername().equals(username));
     }
 
-    public List<Song> getSongs() {
-        return songs;
+    public synchronized boolean emailExists(String email) {
+        return users.stream().anyMatch(u -> u.getEmail().equals(email));
     }
 
-    public void saveUsers() {
+    public synchronized User getUserByUsername(String username) {
+        return users.stream()
+                .filter(u -> u.getUsername().equals(username))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public synchronized List<User> getUsers() {
+        return new ArrayList<>(users);
+    }
+
+    public synchronized List<Song> getSongs() {
+        return new ArrayList<>(songs);
+    }
+
+    private synchronized void saveUsers() {
         try (FileWriter writer = new FileWriter(USERS_FILE)) {
             gson.toJson(users, writer);
         } catch (IOException e) {
@@ -60,7 +82,7 @@ public class Database {
         }
     }
 
-    public void saveSongs() {
+    private synchronized void saveSongs() {
         try (FileWriter writer = new FileWriter(SONGS_FILE)) {
             gson.toJson(songs, writer);
         } catch (IOException e) {
@@ -68,7 +90,7 @@ public class Database {
         }
     }
 
-    public void loadUsers() {
+    private synchronized void loadUsers() {
         try (FileReader reader = new FileReader(USERS_FILE)) {
             Type userListType = new TypeToken<List<User>>() {}.getType();
             users = gson.fromJson(reader, userListType);
@@ -78,7 +100,7 @@ public class Database {
         }
     }
 
-    public void loadSongs() {
+    private synchronized void loadSongs() {
         try (FileReader reader = new FileReader(SONGS_FILE)) {
             Type songListType = new TypeToken<List<Song>>() {}.getType();
             songs = gson.fromJson(reader, songListType);
