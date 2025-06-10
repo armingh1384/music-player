@@ -17,27 +17,24 @@ public class Server {
                         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
-                        String message = in.readLine();
-
                         Gson gson = new Gson();
-                        Request request = gson.fromJson(message, Request.class);
-                        System.out.println("Received request: " + request);
-                        System.out.println("RequestType: " + request.getRequestType());
-                        System.out.println("Action: " + request.getAction());
-                        System.out.println("Data: " + request.getData());
 
-                        if (request == null) {
-                            System.out.println("request is null!");
+                        String message;
+                        while ((message = in.readLine()) != null) {
+                            Request request = gson.fromJson(message, Request.class);
+                            System.out.println("Received request: " + request);
+                            System.out.println("RequestType: " + request.getRequestType());
+                            System.out.println("Action: " + request.getAction());
+                            System.out.println("Data: " + request.getData());
+
+                            Response response = new RequestHandler().handle(request);
+
+
+                            String jsonResponse = gson.toJson(response);
+                            out.write(jsonResponse);
+                            out.newLine();
+                            out.flush();
                         }
-
-                        Response response = new RequestHandler().handle(request);
-                        response.setStatus("ok");
-                        response.setMessage("received");
-
-                        String jsonResponse = gson.toJson(response);
-                        out.write(jsonResponse);
-                        out.newLine();
-                        out.flush();
 
                         clientSocket.close();
                     } catch (IOException e) {
