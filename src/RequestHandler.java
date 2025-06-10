@@ -3,9 +3,12 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 public class RequestHandler {
-    Database database;
+    private final Database database;
 
-    private Authenticator authenticator;
+    public RequestHandler() {
+        this.database = Database.getInstance();
+
+    }
 
     public Response handle(Request request)  {
         String requestType = request.getRequestType();
@@ -327,82 +330,77 @@ public class RequestHandler {
         return response;
     }
 
+    private final Authenticator authenticator = new Authenticator();
+
     private Response handleAuthorization(String action, Map<String, Object> data) {
         Response response = new Response();
+
+        if (data == null) {
+            response.setStatus("error");
+            response.setData("message", "Request data is missing");
+            return response;
+        }
+
+        if (action == null || action.trim().isEmpty()) {
+            response.setStatus("error");
+            response.setData("message", "Action is missing");
+            return response;
+        }
 
         try {
             switch (action.toLowerCase()) {
                 case "signup":
-                    return handleSignUp(
-                            (String) data.get("username"),
-                            (String) data.get("email"),
-                            (String) data.get("password")
-                    );
+                    String username = data.get("username") != null ? data.get("username").toString() : null;
+                    String email = data.get("email") != null ? data.get("email").toString() : null;
+                    String password = data.get("password") != null ? data.get("password").toString() : null;
+
+                    if (username == null || email == null || password == null) {
+                        response.setStatus("error");
+                        response.setData("message", "Missing signup fields");
+                        return response;
+                    }
+
+                    if (authenticator.signUp(username, email, password)) {
+                        response.setStatus("success");
+                        response.setData("message", "Registration successful");
+                    } else {
+                        response.setStatus("error");
+                        response.setData("message", "Username or Email already exists");
+                    }
+                    return response;
 
                 case "login":
-                    return handleLogin(
-                            (String) data.get("username"),
-                            (String) data.get("password")
-                    );
+                    String loginUsername = data.get("username") != null ? data.get("username").toString() : null;
+                    String loginPassword = data.get("password") != null ? data.get("password").toString() : null;
+
+                    if (loginUsername == null || loginPassword == null) {
+                        response.setStatus("error");
+                        response.setData("message", "Missing login fields");
+                        return response;
+                    }
+
+                    if (authenticator.login(loginUsername, loginPassword)) {
+                        response.setStatus("success");
+                        response.setData("message", "Login successful");
+                        User user = Database.getInstance().getUserByUsername(loginUsername);
+                        response.setData("user", user);
+                    } else {
+                        response.setStatus("error");
+                        response.setData("message", "Invalid username or password");
+                    }
+                    return response;
 
                 default:
                     response.setStatus("error");
                     response.setData("message", "Invalid action");
                     return response;
             }
-        } catch (ClassCastException | NullPointerException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             response.setStatus("error");
-            response.setData("message", "Invalid request data");
+            response.setData("message", "Exception: " + e.toString());
             return response;
         }
-    }
-
-    private Response handleSignUp(String username, String email, String password) {
-        Response response = new Response();
-
-        if (username == null || username.trim().isEmpty() ||
-                email == null || email.trim().isEmpty() ||
-                password == null || password.isEmpty()) {
-
-            response.setStatus("error");
-            response.setData("message", "All fields are required");
-            return response;
-        }
-
-        if (database.usernameExists(username)) {
-            response.setStatus("error");
-            response.setData("message", "Username already exists");
-            return response;
-        }
-
-        if (database.emailExists(email)) {
-            response.setStatus("error");
-            response.setData("message", "Email already registered");
-            return response;
-        }
-
-        User newUser = new User(username, email, password);
-        database.addUser(newUser);
-
-        response.setStatus("success");
-        response.setData("message", "Registration successful");
-        return response;
-    }
-
-    private Response handleLogin(String username, String password) {
-        Response response = new Response();
-
-        User user = database.getUserByUsername(username);
-        if (user == null || !user.getPassword().equals(password)) {
-            response.setStatus("error");
-            response.setData("message", "Invalid username or password");
-            return response;
-        }
-
-        response.setStatus("success");
-        response.setData("message", "Login successful");
-        response.setData("user", user);
-        return response;
     }
 
 }
