@@ -10,9 +10,9 @@ public class Main {
         ) {
 
             JSONObject data = new JSONObject();
-            data.put("username", "ali");
-            data.put("email", "ali@gmail.com");
-            data.put("password", "1234");
+            data.put("username", "ari");
+            data.put("email", "alil@gmail.com");
+            data.put("password", "armin1384");
 
             JSONObject request = new JSONObject();
             request.put("requestType","Authorization");
