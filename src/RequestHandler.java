@@ -1,22 +1,21 @@
-import java.io.File;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Base64;
+import com.google.gson.Gson;
 
 public class RequestHandler {
     private final Database database;
 
     public RequestHandler() {
         this.database = Database.getInstance();
-
     }
 
     public Response handle(Request request)  {
         String requestType = request.getRequestType();
         String action = request.getAction();
         Map<String, Object> data = request.getData();
-
         Response response = new Response();
-
         switch (requestType) {
             case "song":
                 response = handleSong(action, data);
@@ -34,22 +33,18 @@ public class RequestHandler {
                 response.setStatus("error");
                 response.setMessage("Unknown request type: " + requestType);
         }
-
         return response;
     }
 
     private Response handleSong(String action, Map<String, Object> data) {
         Response response = new Response();
         Song song = (Song) data.get("song");
-
         if (song == null) {
             response.setStatus("error");
             response.setData("message", "Song is missing.");
             return response;
         }
-
         Object value = data.get("value");
-
         switch (action) {
             case "getName":
                 response.setData("name", song.getName());
@@ -103,20 +98,10 @@ public class RequestHandler {
                 song.setAlbum((String) value);
                 break;
             case "setGenre":
-                if (value instanceof Genre) {
-                    song.setGenre((Genre) value);
-                } else if (value instanceof String) {
-                    try {
-                        song.setGenre(Genre.valueOf((String) value));
-                    } catch (IllegalArgumentException e) {
-                        response.setStatus("error");
-                        response.setData("message", "Invalid genre.");
-                        return response;
-                    }
-                }
+               song.setGenre((String)data.get("genre"));
                 break;
             case "setReleaseYear":
-                song.setReleaseYear((int) value);
+                song.setReleaseYear((Double) value);
                 break;
             case "setMusicPath":
                 song.setMusicPath((String) value);
@@ -138,7 +123,7 @@ public class RequestHandler {
                 song.setLiked((boolean) value);
                 break;
             case "setDurationPlayed":
-                song.setDurationPlayed((int) value);
+                song.setDurationPlayed((Double) value);
                 break;
             case "setAddedTime":
                 if (value instanceof LocalDateTime) {
@@ -158,25 +143,46 @@ public class RequestHandler {
                 response.setData("message", "Invalid action: " + action);
                 return response;
         }
-
         if (!action.startsWith("get") && !action.equals("toString") && !action.equals("getDetails")) {
             response.setStatus("success");
             response.setData("message", action + " applied.");
         }
-
         return response;
     }
 
+    // HandleUser.java
     private Response handleUser(String action, Map<String, Object> data) {
         Response response = new Response();
-        User user = (User) data.get("user");
-        Object value = data.get("value");
-        Object value2 = data.get("value2");
+        Gson gson = new Gson();
+        Database db = Database.getInstance();
 
+        String username = (String) data.get("username");
+        if (username == null || username.isEmpty()) {
+            response.setStatus("error");
+            response.setData("message", "Username is required.");
+            return response;
+        }
+        User user = db.getUserByUsername(username);
         if (user == null) {
             response.setStatus("error");
-            response.setData("message", "User is missing.");
+            response.setData("message", "User not found.");
             return response;
+        }
+
+        String playlistname = (String) data.get("playlistname");
+        PlayList playlist = null;
+        if (playlistname != null) {
+            for (PlayList p : user.getPlaylists()) {
+                if (playlistname.equals(p.getName())) {
+                    playlist = p;
+                    break;
+                }
+            }
+            if ((playlist == null && action.equals("addSongToPlaylist")) || action.equals("addPlaylist")) {
+                playlist = new PlayList();
+                playlist.setName(playlistname);
+                user.addPlaylist(playlist);
+            }
         }
 
         switch (action) {
@@ -190,65 +196,108 @@ public class RequestHandler {
                 response.setData("playlists", user.getPlaylists());
                 break;
             case "getSongs":
-                response.setData("songs", user.getSongs());
+                try {
+                     username = (String) data.get("username");
+                    String playlistName = (String) data.get("playlistname");
+
+
+                     user = db.getUserByUsername(username);
+                    if (user == null) {
+                        response.setStatus("error");
+                        response.setData("message", "User not found");
+                        break;
+                    }
+
+
+                     playlist = user.getPlaylists().stream()
+                            .filter(p -> p.getName().equalsIgnoreCase(playlistName))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (playlist == null) {
+                        response.setStatus("error");
+                        response.setData("message", "Playlist not found");
+                        break;
+                    }
+
+                    response.setStatus("success");
+                    response.setData("songs", playlist.getSongs());
+
+                } catch (Exception e) {
+                    response.setStatus("error");
+                    response.setData("message", "Error retrieving songs: " + e.getMessage());
+                }
+
                 break;
             case "addPlaylist":
-                if (value instanceof PlayList) {
-                    user.addPlaylist((PlayList) value);
+                if (playlist != null) {
+                    db.updateUser(user);
                     response.setData("status", "playlist added");
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Value must be a PlayList.");
+                    response.setData("message", "Playlist is missing or invalid.");
                     return response;
                 }
                 break;
             case "removePlaylist":
-                if (value instanceof PlayList) {
-                    user.removePlaylist((PlayList) value);
+                if (playlist != null) {
+                    user.removePlaylist(playlist);
+                    db.updateUser(user);
                     response.setData("status", "playlist removed");
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Value must be a PlayList.");
+                    response.setData("message", "Playlist is missing or invalid.");
                     return response;
                 }
                 break;
             case "addSongToPlaylist":
-                if (value instanceof PlayList && value2 instanceof Song) {
-                    user.addSongToPlaylist((PlayList) value, (Song) value2);
-                    response.setData("status", "song added to playlist");
+                if (playlist != null) {
+                    Song song = createSongFromData(data);
+                    playlist.addSong(song);
+                    if (!user.getSongs().contains(song)) {
+                        user.getSongs().add(song);
+                    }
+                    db.updateUser(user);
+                    response.setData("status", "song added to playlist and user");
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Both value and value2 must be provided (PlayList and Song).");
+                    response.setData("message", "Playlist is missing or invalid.");
                     return response;
                 }
                 break;
             case "removeSongFromPlaylist":
-                if (value instanceof PlayList && value2 instanceof Song) {
-                    user.removeSongFromPlaylist((PlayList) value, (Song) value2);
+                Song songToRemove = getSongFromData(data, gson, "song");
+                if (playlist != null && songToRemove != null) {
+                    user.removeSongFromPlaylist(playlist, songToRemove);
+                    db.updateUser(user);
                     response.setData("status", "song removed from playlist");
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Both value and value2 must be provided (PlayList and Song).");
+                    response.setData("message", "Playlist and song are required.");
                     return response;
                 }
                 break;
             case "likeSong":
-                if (value instanceof Song) {
-                    user.likeSong((Song) value);
+                Song songToLike = getSongFromData(data, gson, "song");
+                if (songToLike != null) {
+                    user.likeSong(songToLike);
+                    db.updateUser(user);
                     response.setData("status", "song liked");
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Value must be a Song.");
+                    response.setData("message", "Song is missing.");
                     return response;
                 }
                 break;
             case "dislikeSong":
-                if (value instanceof Song) {
-                    user.dislikeSong((Song) value);
+                Song songToDislike = getSongFromData(data, gson, "song");
+                if (songToDislike != null) {
+                    user.dislikeSong(songToDislike);
+                    db.updateUser(user);
                     response.setData("status", "song disliked");
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Value must be a Song.");
+                    response.setData("message", "Song is missing.");
                     return response;
                 }
                 break;
@@ -257,109 +306,171 @@ public class RequestHandler {
                 response.setData("message", "Invalid action: " + action);
                 return response;
         }
-
         response.setStatus("success");
         return response;
     }
 
+    private Song createSongFromData(Map<String, Object> data) {
+        Song song = new Song();
+        song.setName((String) data.getOrDefault("name", ""));
+        song.setArtist((String) data.getOrDefault("artist", ""));
+        song.setBase64((String) data.getOrDefault("base64Audio", ""));
+        song.setMusicPath((String) data.getOrDefault("musicPath", ""));
+        song.setReleaseYear((Double) data.getOrDefault("releaseYear", 0.0));
+        song.setGenre((String) data.getOrDefault("genre", ""));
+        song.setLyrics((String) data.getOrDefault("lyrics", ""));
+        song.setDurationPlayed((Double) data.getOrDefault("durationPlayed", 0.0));
+        song.setAlbum((String) data.getOrDefault("album", ""));
+        return song;
+    }
+
+    private Song getSongFromData(Map<String, Object> data, Gson gson, String key) {
+        if (data.get(key) instanceof Song) {
+            return (Song) data.get(key);
+        } else if (data.get(key) instanceof Map) {
+            return gson.fromJson(gson.toJson(data.get(key)), Song.class);
+        }
+        return null;
+    }
+
     private Response handlePlayList(String action, Map<String, Object> data) {
         Response response = new Response();
-        PlayList playList = (PlayList) data.get("playList");
-        Object value = data.get("value");
-
-        if (playList == null) {
-            response.setStatus("error");
-            response.setData("message", "PlayList is missing.");
-            return response;
-        }
-
-        switch (action) {
-            case "getSongs":
-                response.setData("songs", playList.getSongs());
-                break;
-            case "getNumberOfSongs":
-                response.setData("numberOfSongs", playList.getNumberOfSongs());
-                break;
-            case "addSong":
-                if (value instanceof Song) {
-                    boolean added = playList.addSong((Song) value);
-                    response.setData("added", added);
-                } else {
-                    response.setStatus("error");
-                    response.setData("message", "Value must be a Song.");
-                    return response;
-                }
-                break;
-            case "removeSong":
-                if (value instanceof Song) {
-                    boolean removed = playList.removeSong((Song) value);
-                    response.setData("removed", removed);
-                } else {
-                    response.setStatus("error");
-                    response.setData("message", "Value must be a Song.");
-                    return response;
-                }
-                break;
-            case "filter":
-                if (value instanceof Filter) {
-                    PlayList filtered = playList.filter((Filter) value);
-                    response.setData("filteredPlayList", filtered);
-                } else {
-                    response.setStatus("error");
-                    response.setData("message", "Value must be a Filter.");
-                    return response;
-                }
-                break;
-            case "collectData":
-                if (value instanceof DataCollector) {
-                    Object[] collected = playList.collectData((DataCollector) value);
-                    response.setData("collectedData", collected);
-                } else {
-                    response.setStatus("error");
-                    response.setData("message", "Value must be a DataCollector.");
-                    return response;
-                }
-                break;
-            default:
+        Gson gson = new Gson();
+        try {
+            PlayList playList = extractPlayListFromData(data, gson);
+            if (playList == null) {
                 response.setStatus("error");
-                response.setData("message", "Invalid action: " + action);
+                response.setData("message", "PlayList data is invalid");
                 return response;
+            }
+            switch (action) {
+                case "getSongs":
+                    response.setData("songs", playList.getSongs());
+                    break;
+                case "getNumberOfSongs":
+                    response.setData("numberOfSongs", playList.getNumberOfSongs());
+                    break;
+                case "addSong":
+                    response.setStatus("error");
+                    response.setData("message", "addSong should be done via user, not playlist!");
+                    return response;
+                case "removeSong":
+                    Object value = data.get("value");
+                    Song song = getSongFromData(data, gson, "value");
+                    response.setData("removed", playList.removeSong(song));
+                    break;
+                case "filter":
+                    Object filterValue = data.get("value");
+                    Filter filter = null;
+                    if (filterValue instanceof Filter) {
+                        filter = (Filter) filterValue;
+                    } else if (filterValue instanceof Map) {
+                        filter = gson.fromJson(gson.toJson(filterValue), Filter.class);
+                    }
+                    response.setData("filteredPlayList", playList.filter(filter));
+                    break;
+                case "collectData":
+                    Object collectorValue = data.get("value");
+                    DataCollector collector = null;
+                    if (collectorValue instanceof DataCollector) {
+                        collector = (DataCollector) collectorValue;
+                    } else if (collectorValue instanceof Map) {
+                        collector = gson.fromJson(gson.toJson(collectorValue), DataCollector.class);
+                    }
+                    response.setData("collectedData", playList.collectData(collector));
+                    break;
+                default:
+                    response.setStatus("error");
+                    response.setData("message", "Invalid action: " + action);
+            }
+            response.setStatus("success");
+        } catch (Exception e) {
+            response.setStatus("error");
+            response.setData("message", "Processing error: " + e.getMessage());
         }
-
-        response.setStatus("success");
         return response;
+    }
+
+    private PlayList extractPlayListFromData(Map<String, Object> data, Gson gson) {
+        Object playListObj = data.get("playList");
+        if (playListObj == null) return null;
+        if (playListObj instanceof PlayList) {
+            return (PlayList) playListObj;
+        }
+        if (playListObj instanceof Map) {
+            String json = gson.toJson(playListObj);
+            return gson.fromJson(json, PlayList.class);
+        }
+        return null;
+    }
+
+    private Genre extractGenre(Map<String, Object> data) {
+        if (!data.containsKey("genre") || !(data.get("genre") instanceof String)) {
+            return Genre.UNKNOWN;
+        }
+        try {
+            return Genre.valueOf(((String) data.get("genre")).toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Genre.UNKNOWN;
+        }
+    }
+
+    private int extractReleaseYear(Map<String, Object> data) {
+        if (!data.containsKey("releaseYear") || !(data.get("releaseYear") instanceof Number)) {
+            return 2023;
+        }
+        return ((Number) data.get("releaseYear")).intValue();
+    }
+
+    private int extractDurationPlayed(Map<String, Object> data) {
+        if (!data.containsKey("durationPlayed") || !(data.get("durationPlayed") instanceof Number)) {
+            return 0;
+        }
+        return ((Number) data.get("durationPlayed")).intValue();
+    }
+
+    private String validateBase64Audio(Map<String, Object> data) throws Exception {
+        return (String) data.get("base64Audio");
+    }
+
+    private String validateName(Map<String, Object> data) throws Exception {
+        return (String) data.get("name");
+    }
+
+    private File createTempAudioFile(String name, String base64Audio) throws Exception {
+        File tempFile = File.createTempFile(name, ".mp3");
+        byte[] audioBytes = Base64.getDecoder().decode(base64Audio);
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(audioBytes);
+        }
+        return tempFile;
     }
 
     private final Authenticator authenticator = new Authenticator();
 
     private Response handleAuthorization(String action, Map<String, Object> data) {
         Response response = new Response();
-
         if (data == null) {
             response.setStatus("error");
             response.setData("message", "Request data is missing");
             return response;
         }
-
         if (action == null || action.trim().isEmpty()) {
             response.setStatus("error");
             response.setData("message", "Action is missing");
             return response;
         }
-
         try {
             switch (action.toLowerCase()) {
                 case "signup":
                     String username = data.get("username") != null ? data.get("username").toString() : null;
                     String email = data.get("email") != null ? data.get("email").toString() : null;
                     String password = data.get("password") != null ? data.get("password").toString() : null;
-
                     if (username == null || email == null || password == null) {
                         response.setStatus("error");
                         response.setData("message", "Missing signup fields");
                         return response;
                     }
-
                     if (authenticator.signUp(username, email, password)) {
                         response.setStatus("success");
                         response.setData("message", "Registration successful");
@@ -368,17 +479,14 @@ public class RequestHandler {
                         response.setData("message", "Username or Email already exists");
                     }
                     return response;
-
                 case "login":
                     String loginUsername = data.get("username") != null ? data.get("username").toString() : null;
                     String loginPassword = data.get("password") != null ? data.get("password").toString() : null;
-
                     if (loginUsername == null || loginPassword == null) {
                         response.setStatus("error");
                         response.setData("message", "Missing login fields");
                         return response;
                     }
-
                     if (authenticator.login(loginUsername, loginPassword)) {
                         response.setStatus("success");
                         response.setData("message", "Login successful");
@@ -389,18 +497,15 @@ public class RequestHandler {
                         response.setData("message", "Invalid username or password");
                     }
                     return response;
-
                 default:
                     response.setStatus("error");
                     response.setData("message", "Invalid action");
                     return response;
             }
         } catch (Exception e) {
-            e.printStackTrace();
             response.setStatus("error");
             response.setData("message", "Exception: " + e.toString());
             return response;
         }
     }
-
 }

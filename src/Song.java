@@ -7,41 +7,40 @@ public class Song {
     private String artist;
     private String musicPath;
     private File musicFile;
-    private int releaseYear;
-    private Genre genre;
+    private Double releaseYear;
+    private String genre;
     private String lyrics;
     private int countOfLikes;
     private boolean isLiked;
-    private int durationPlayed;
+    private Double durationPlayed;
     private LocalDateTime addedTime;
+    private String Base64;
 
-    public Song(LocalDateTime addedTime, Genre genre, String lyrics, int releaseYear, File musicFile, String musicPath, int durationPlayed, String artist, String album, String name) {
+    public Song(LocalDateTime addedTime, String genre, String lyrics, int releaseYear, File musicFile, String musicPath, int durationPlayed, String artist, String album, String name) {
         this.addedTime = addedTime;
         this.genre = genre;
         this.lyrics = lyrics;
-        this.releaseYear = releaseYear > 0 ? releaseYear : 2023;
+        this.releaseYear = releaseYear > 0.0 ? releaseYear : 2023.0;
         this.musicFile = musicFile;
         this.musicPath = musicPath;
-        this.durationPlayed = Math.max(durationPlayed, 0);
+        this.durationPlayed = Math.max(durationPlayed, 0.0);
         this.artist = artist;
         this.album = album;
         this.name = name;
     }
 
-
     public Song() {
         this.addedTime = LocalDateTime.now();
-        this.genre = Genre.UNKNOWN;
+        this.genre = "";
         this.lyrics = "";
-        this.releaseYear = 2023;
+        this.releaseYear = 2023.0;
         this.musicFile = null;
         this.musicPath = "";
-        this.durationPlayed = 0;
+        this.durationPlayed = 0.0;
         this.artist = "";
         this.album = "";
         this.name = "";
     }
-
 
     public String getName() {
         return name;
@@ -91,21 +90,21 @@ public class Song {
         this.musicFile = musicFile;
     }
 
-    public int getReleaseYear() {
+    public Double getReleaseYear() {
         return releaseYear;
     }
 
-    public void setReleaseYear(int releaseYear) {
+    public void setReleaseYear(Double releaseYear) {
         if (releaseYear > 0) {
             this.releaseYear = releaseYear;
         }
     }
 
-    public Genre getGenre() {
+    public String getGenre() {
         return genre;
     }
 
-    public void setGenre(Genre genre) {
+    public void setGenre(String genre) {
         this.genre = genre;
     }
 
@@ -135,11 +134,11 @@ public class Song {
         this.isLiked = isLiked;
     }
 
-    public int getDurationPlayed() {
+    public Double getDurationPlayed() {
         return durationPlayed;
     }
 
-    public void setDurationPlayed(int durationPlayed) {
+    public void setDurationPlayed(Double durationPlayed) {
         if (durationPlayed >= 0) {
             this.durationPlayed = durationPlayed;
         }
@@ -153,6 +152,13 @@ public class Song {
         this.addedTime = addedTime;
     }
 
+    public String getBase64() {
+        return Base64;
+    }
+
+    public void setBase64(String base64) {
+        this.Base64 = base64;
+    }
 
     public String getDetails() {
         return String.format("Name: %s, Artist: %s, Album: %s, Genre: %s, Release Year: %d", name, artist, album, genre, releaseYear);

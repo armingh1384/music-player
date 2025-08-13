@@ -51,6 +51,21 @@ public class Database {
         saveSongs();
     }
 
+    public synchronized void updateUser(User updatedUser) {
+        boolean exists = false;
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getUsername().equals(updatedUser.getUsername())) {
+                users.set(i, updatedUser);
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            users.add(updatedUser);
+        }
+        saveUsers();
+    }
+
     public synchronized boolean usernameExists(String username) {
         return users.stream().anyMatch(u -> u.getUsername().equals(username));
     }

@@ -1,50 +1,45 @@
-public class PlayList {
-    private int size;
-    private Song[] songs;
-    private int control = 0;
+import java.util.ArrayList;
+import java.util.List;
 
-    public PlayList(int size) {
-        this.size = size;
-        this.songs = new Song[size];
+public class PlayList {
+    private List<Song> songs;
+    private int size;
+    private String playlistname;
+    public String getName(){
+        return playlistname;
+    }
+    public void setName(String name){
+        this.playlistname = name;
     }
 
-    public Song[] getSongs() {
+    public PlayList() {
+        this.songs = new ArrayList<>();
+    }
+
+    public PlayList(int size) {
+        this.songs = new ArrayList<>(size);
+    }
+
+    public List<Song> getSongs() {
         return songs;
     }
 
     public int getNumberOfSongs() {
-        int count = 0;
-        for (Song song : songs) {
-            if (song != null)
-                count++;
-        }
-        return count;
+        return songs.size();
     }
 
     public boolean addSong(Song song) {
-        if (control >= size)
-            return false;
-        songs[control++] = song;
-        return true;
+        return songs.add(song);
     }
 
     public boolean removeSong(Song song) {
-        for (int i = 0; i < control; i++) {
-            if (songs[i] != null && songs[i].equals(song)) {
-                for (int j = i; j < control - 1; j++) {
-                    songs[j] = songs[j + 1];
-                }
-                songs[--control] = null;
-                return true;
-            }
-        }
-        return false;
+        return songs.remove(song);
     }
 
     public PlayList filter(Filter filter) {
-        PlayList filteredPlayList = new PlayList(size);
+        PlayList filteredPlayList = new PlayList();
         for (Song song : songs) {
-            if (song != null && filter.accept(song)) {
+            if (filter.accept(song)) {
                 filteredPlayList.addSong(song);
             }
         }
@@ -55,10 +50,16 @@ public class PlayList {
         Object[] data = new Object[getNumberOfSongs()];
         int index = 0;
         for (Song song : songs) {
-            if (song != null) {
-                data[index++] = collector.get(song);
-            }
+            data[index++] = collector.get(song);
         }
         return data;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
     }
 }

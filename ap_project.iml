@@ -12,5 +12,7 @@
     <orderEntry type="library" exported="" name="gson-2.10.1" level="project" />
     <orderEntry type="library" name="gson-2.10.2" level="project" />
     <orderEntry type="library" name="json-20240303" level="project" />
+    <orderEntry type="library" name="gson-2.10.3" level="project" />
+    <orderEntry type="library" name="json-20240304" level="project" />
   </component>
 </module>

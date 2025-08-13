@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.*;
 import org.json.*;
 
-public class Main {
+public class Main2 {
     public static void main(String[] args) {
         try (Socket socket = new Socket("localhost", 10384);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -10,13 +10,12 @@ public class Main {
         ) {
 
             JSONObject data = new JSONObject();
-            data.put("username", "ariutitutotototoottoott");
-            data.put("email", "aliwwwwwqqruppyhhnnl@gmail.com");
+            data.put("username", "ariiyrl6r6r86reyip86reuy");
             data.put("password", "armin1384");
 
             JSONObject request = new JSONObject();
             request.put("requestType","Authorization");
-            request.put("action", "signup");
+            request.put("action", "signin");
             request.put("data", data);
 
             out.println(request.toString());

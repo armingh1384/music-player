@@ -8,6 +8,7 @@ public class User {
     private List<PlayList> playlists;
     private List<Song> songs;
 
+
     public User(String username, String email, String password) {
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty.");
