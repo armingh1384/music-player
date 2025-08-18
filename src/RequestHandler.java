@@ -1,7 +1,7 @@
 import java.io.*;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Base64;
+import java.util.*;
+
 import com.google.gson.Gson;
 
 public class RequestHandler {
@@ -155,14 +155,37 @@ public class RequestHandler {
         Response response = new Response();
         Gson gson = new Gson();
         Database db = Database.getInstance();
+        if(action.equals("ImportFromNava")){ List<Map<String, Object>> globalSongs = new ArrayList<>();
+                db.loadSongs();
+
+                for (Song s : db.getSongs()) {
+                    Map<String, Object> songInfo = new HashMap<>();
+                    songInfo.put("name", s.getName());
+
+                    songInfo.put("genre", s.getGenre());
+                    songInfo.put("base64", s.getBase64());
+                    globalSongs.add(songInfo);
+                }
+                response.setStatus("success");
+                response.setData("globalsongs", globalSongs);
+                return response;}
 
         String username = (String) data.get("username");
-        if (username == null || username.isEmpty()) {
+        if (username==null){
+            username= (String) data.get("lastusername");
+           User user = db.getUserByUsername(username);
+
+
+        }
+
+
+        if ((username == null || username.isEmpty())) {
             response.setStatus("error");
             response.setData("message", "Username is required.");
             return response;
         }
         User user = db.getUserByUsername(username);
+
         if (user == null) {
             response.setStatus("error");
             response.setData("message", "User not found.");
@@ -186,11 +209,79 @@ public class RequestHandler {
         }
 
         switch (action) {
-            case "getUsername":
-                response.setData("username", user.getUsername());
+            case "update": {
+
+                String newUsername = (String) data.get("Nusername");
+                String newEmail = (String) data.get("Nemail");
+                String newPassword = (String) data.get("Npassword");
+
+                if (user == null) {
+                    response.setData("status", "error");
+                    response.setData("msg", "User not found.");
+                    break;
+                }
+                boolean checkednameandmail=true;int control =0;
+                for (User u :db.getUsers()){
+                    if(u.getUsername()==newUsername||u.getEmail()==newEmail){
+                        control++;
+
+                    }
+                    if (control>1)
+                        checkednameandmail=false;
+                    if(!checkednameandmail)
+                        break;
+
+                }
+                if(checkednameandmail){
+                user.setUsername(newUsername);
+                user.setEmail(newEmail);}
+                else{
+                    response.setData("message","Name or Email has been used by others");
+               return response; }
+                if(newPassword.contains(newUsername)){
+                    response.setStatus("error");
+                    response.setData("message","password contains username");
+                return response;}
+                user.setPassword(newPassword);
+                boolean updated=true;
+
+                db.updateUser(user);
+                if (updated) {
+                    response.setData("status", "success");
+                    response.setData("msg", "Profile updated successfully.");
+                } else {
+                    response.setData("status", "error");
+                    response.setData("msg", "Update failed.");
+                }
                 break;
-            case "getEmail":
-                response.setData("email", user.getEmail());
+            }
+
+            case "AddToNava":
+                db.loadSongs();
+                Song songToGlobal = createSongFromData(data);
+                if (songToGlobal != null) {
+                    db.addSong(songToGlobal);
+                    db.saveSongs();
+                    response.setData("status", "song adddded to global");
+                } else {
+                    response.setStatus("error");
+                    response.setData("message", "Song data is invalid.");
+                    return response;
+                }
+                break;
+
+        case "getProfile":
+                username = (String) data.get("username");
+                 user = db.getUserByUsername(username);
+                if (user != null) {
+                    response.setData("username", user.getUsername());
+                    response.setData("email", user.getEmail());
+
+                    response.setStatus("success");
+                } else {
+                    response.setStatus("error");
+
+                }
                 break;
             case "getPlaylists":
                 response.setData("playlists", user.getPlaylists());
@@ -266,11 +357,16 @@ public class RequestHandler {
                 }
                 break;
             case "removeSongFromPlaylist":
-                Song songToRemove = getSongFromData(data, gson, "song");
+                Song songToRemove =  createSongFromData(data);
+
+
+                if(songToRemove==null) {
+                    response.setStatus("error"); return response;
+                }
                 if (playlist != null && songToRemove != null) {
-                    user.removeSongFromPlaylist(playlist, songToRemove);
-                    db.updateUser(user);
-                    response.setData("status", "song removed from playlist");
+                playlist.removeSong(songToRemove);
+                db.updateUser(user);
+                    response.setData("status", "we want to remove"+songToRemove.getName());
                 } else {
                     response.setStatus("error");
                     response.setData("message", "Playlist and song are required.");
@@ -278,7 +374,7 @@ public class RequestHandler {
                 }
                 break;
             case "likeSong":
-                Song songToLike = getSongFromData(data, gson, "song");
+                Song songToLike = user.findsongbyname((String)data.get("name"),playlist);
                 if (songToLike != null) {
                     user.likeSong(songToLike);
                     db.updateUser(user);
@@ -290,7 +386,7 @@ public class RequestHandler {
                 }
                 break;
             case "dislikeSong":
-                Song songToDislike = getSongFromData(data, gson, "song");
+                Song songToDislike = getSongFromData(data,  "song");
                 if (songToDislike != null) {
                     user.dislikeSong(songToDislike);
                     db.updateUser(user);
@@ -314,7 +410,7 @@ public class RequestHandler {
         Song song = new Song();
         song.setName((String) data.getOrDefault("name", ""));
         song.setArtist((String) data.getOrDefault("artist", ""));
-        song.setBase64((String) data.getOrDefault("base64Audio", ""));
+        song.setBase64((String) data.getOrDefault("base64Audio", "salam"));
         song.setMusicPath((String) data.getOrDefault("musicPath", ""));
         song.setReleaseYear((Double) data.getOrDefault("releaseYear", 0.0));
         song.setGenre((String) data.getOrDefault("genre", ""));
@@ -324,11 +420,11 @@ public class RequestHandler {
         return song;
     }
 
-    private Song getSongFromData(Map<String, Object> data, Gson gson, String key) {
+    private Song getSongFromData(Map data, String key) {
         if (data.get(key) instanceof Song) {
             return (Song) data.get(key);
         } else if (data.get(key) instanceof Map) {
-            return gson.fromJson(gson.toJson(data.get(key)), Song.class);
+                return createSongFromData(data);
         }
         return null;
     }
@@ -356,7 +452,7 @@ public class RequestHandler {
                     return response;
                 case "removeSong":
                     Object value = data.get("value");
-                    Song song = getSongFromData(data, gson, "value");
+                    Song song = getSongFromData(data, "song");
                     response.setData("removed", playList.removeSong(song));
                     break;
                 case "filter":
@@ -471,6 +567,10 @@ public class RequestHandler {
                         response.setData("message", "Missing signup fields");
                         return response;
                     }
+                    if(password.contains(username)){
+                        response.setStatus("error");
+                    response.setData("message","password contains username");
+                    return response;}
                     if (authenticator.signUp(username, email, password)) {
                         response.setStatus("success");
                         response.setData("message", "Registration successful");

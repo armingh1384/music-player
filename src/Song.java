@@ -14,7 +14,8 @@ public class Song {
     private boolean isLiked;
     private Double durationPlayed;
     private LocalDateTime addedTime;
-    private String Base64;
+    private String base64Audio;
+
 
     public Song(LocalDateTime addedTime, String genre, String lyrics, int releaseYear, File musicFile, String musicPath, int durationPlayed, String artist, String album, String name) {
         this.addedTime = addedTime;
@@ -153,11 +154,11 @@ public class Song {
     }
 
     public String getBase64() {
-        return Base64;
+        return base64Audio;
     }
 
     public void setBase64(String base64) {
-        this.Base64 = base64;
+        this.base64Audio = base64;
     }
 
     public String getDetails() {

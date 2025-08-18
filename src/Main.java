@@ -1,33 +1,33 @@
 import java.io.*;
-import java.net.*;
-import org.json.*;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        try (Socket socket = new Socket("localhost", 10384);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-        ) {
-
-            JSONObject data = new JSONObject();
-            data.put("username", "ariutitutotototoottoott");
-            data.put("email", "aliwwwwwqqruppyhhnnl@gmail.com");
-            data.put("password", "armin1384");
-
-            JSONObject request = new JSONObject();
-            request.put("requestType","Authorization");
-            request.put("action", "signup");
-            request.put("data", data);
-
-            out.println(request.toString());
-
-            out.flush();
-
-            String response = in.readLine();
-            System.out.println(response);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        // تست نوشتن فایل دستی
+        try (FileWriter writer = new FileWriter("C:\\Users\\armin\\Desktop\\ap_project\\songs_test.txt")) {
+            writer.write("[{\"name\":\"manual_test\"}]\n");
+            writer.flush();
+            System.out.println("File written successfully!");
+        } catch (IOException e) {
+            System.out.println("error: " + e.getMessage());
         }
+
+        // اگر Database و Song داری و می‌خواهی تست کنی که آهنگ ذخیره می‌شود:
+        Database db = Database.getInstance();
+        db.loadSongs();
+        Song s = new Song();
+        s.setName("TestSong");
+        s.setGenre("POP");
+        s.setBase64("base64data");
+        db.getSongs().add(s);
+        db.saveSongs();
+
+        db.loadSongs();
+        List<Song> allSongs = db.getSongs();
+        for (Song song : allSongs) {
+            System.out.println(song.getName());
+        }
+
+        System.out.println("Absolute path: " + new File(Database.SONGS_FILE).getAbsolutePath());
     }
 }

@@ -17,7 +17,7 @@ public class Database {
     private List<User> users;
 
     private static final String USERS_FILE = "users.json";
-    private static final String SONGS_FILE = "songs.json";
+    public static final String SONGS_FILE = "songs.json";
 
     private Database() {
         gson = new Gson();
@@ -97,7 +97,7 @@ public class Database {
         }
     }
 
-    private synchronized void saveSongs() {
+    public synchronized void saveSongs() {
         try (FileWriter writer = new FileWriter(SONGS_FILE)) {
             gson.toJson(songs, writer);
         } catch (IOException e) {
@@ -115,7 +115,7 @@ public class Database {
         }
     }
 
-    private synchronized void loadSongs() {
+    public synchronized void loadSongs() {
         try (FileReader reader = new FileReader(SONGS_FILE)) {
             Type songListType = new TypeToken<List<Song>>() {}.getType();
             songs = gson.fromJson(reader, songListType);

@@ -15,19 +15,26 @@ public class Server {
                         DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
                         DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
                         Gson gson = new Gson();
+                        ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
                         while (true) {
                             try {
                                 int length = dis.readInt();
-                                byte[] buffer = new byte[length];
-                                dis.readFully(buffer);
-                                String message = new String(buffer, StandardCharsets.UTF_8);
-                                Request request = gson.fromJson(message, Request.class);
-                                Response response = new RequestHandler().handle(request);
-                                String jsonResponse = gson.toJson(response);
-                                byte[] outBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
-                                dos.writeInt(outBytes.length);
-                                dos.write(outBytes);
-                                dos.flush();
+                                byte[] chunk = new byte[length];
+                                dis.readFully(chunk);
+                                bufferStream.write(chunk);
+                                String message =bufferStream.toString(StandardCharsets.UTF_8.name());
+                                System.out.println(message);
+                                if (message.trim().endsWith("}")) {
+                                    Request request = gson.fromJson(message, Request.class);
+                                    Response response = new RequestHandler().handle(request);
+                                    String jsonResponse = gson.toJson(response);
+                                    System.out.println(jsonResponse);
+                                    byte[] outBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+                                    dos.writeInt(outBytes.length);
+                                    dos.write(outBytes);
+                                    dos.flush();
+                                    bufferStream.reset();
+                                }
                             } catch (EOFException e) {
                                 break;
                             } catch (Exception e) {
@@ -38,6 +45,7 @@ public class Server {
                                 dos.writeInt(errBytes.length);
                                 dos.write(errBytes);
                                 dos.flush();
+                                bufferStream.reset();
                             }
                         }
                         clientSocket.close();

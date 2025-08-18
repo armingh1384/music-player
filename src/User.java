@@ -29,7 +29,10 @@ public class User {
     public String getUsername() {
         return username;
     }
-    public String getPassword() {return password;}
+
+    public String getPassword() {
+        return password;
+    }
 
     public void setUsername(String username) {
         if (username == null || username.isEmpty()) {
@@ -37,9 +40,22 @@ public class User {
         }
         this.username = username;
     }
+    public Song findsongbyname(String name,PlayList p){
+        for(Song s : p.getSongs()){
+            if(s.getName().equals(s)){
+                return s;
+            }
+        }
+        return null;
+    }
+
+
 
     public String getEmail() {
         return email;
+    }
+    public void setPassword(String s){
+        this.password = s;
     }
 
     public void setEmail(String email) {
@@ -121,13 +137,4 @@ public class User {
         }
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", playlists=" + playlists.size() +
-                ", songs=" + songs.size() +
-                '}';
-    }
 }
