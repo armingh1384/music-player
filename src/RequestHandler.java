@@ -364,9 +364,9 @@ public class RequestHandler {
                     response.setStatus("error"); return response;
                 }
                 if (playlist != null && songToRemove != null) {
-                playlist.removeSong(songToRemove);
-                db.updateUser(user);
-                    response.setData("status", "we want to remove"+songToRemove.getName());
+                    playlist.removeSong(songToRemove);
+                    db.updateUser(user);
+                    response.setData("status", playlist.getName());
                 } else {
                     response.setStatus("error");
                     response.setData("message", "Playlist and song are required.");
@@ -374,7 +374,7 @@ public class RequestHandler {
                 }
                 break;
             case "likeSong":
-                Song songToLike = user.findsongbyname((String)data.get("name"),playlist);
+                Song songToLike = createSongFromData(data);
                 if (songToLike != null) {
                     user.likeSong(songToLike);
                     db.updateUser(user);
@@ -390,7 +390,7 @@ public class RequestHandler {
                 if (songToDislike != null) {
                     user.dislikeSong(songToDislike);
                     db.updateUser(user);
-                    response.setData("status", "song disliked");
+                    response.setData("status", "song disLiked");
                 } else {
                     response.setStatus("error");
                     response.setData("message", "Song is missing.");
@@ -417,6 +417,7 @@ public class RequestHandler {
         song.setLyrics((String) data.getOrDefault("lyrics", ""));
         song.setDurationPlayed((Double) data.getOrDefault("durationPlayed", 0.0));
         song.setAlbum((String) data.getOrDefault("album", ""));
+        song.setLiked((boolean) data.getOrDefault("isLiked", false));
         return song;
     }
 

@@ -1,5 +1,7 @@
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.text.Normalizer;
 
 public class Song {
     private String name;
@@ -16,7 +18,28 @@ public class Song {
     private LocalDateTime addedTime;
     private String base64Audio;
 
+    private String normalizeString(String input) {
+        if (input == null) return "";
+        return Normalizer.normalize(input, Normalizer.Form.NFC)
+                .replaceAll("[^\\p{Print}\\p{Space}]", "");
+    }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Song song = (Song) o;
+        return normalizeString(name).equalsIgnoreCase(normalizeString(song.name)) &&
+                normalizeString(artist).equalsIgnoreCase(normalizeString(song.artist));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                normalizeString(name).toLowerCase(),
+                normalizeString(artist).toLowerCase()
+        );
+    }
     public Song(LocalDateTime addedTime, String genre, String lyrics, int releaseYear, File musicFile, String musicPath, int durationPlayed, String artist, String album, String name) {
         this.addedTime = addedTime;
         this.genre = genre;
