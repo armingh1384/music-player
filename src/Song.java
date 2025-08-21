@@ -29,15 +29,15 @@ public class Song {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Song song = (Song) o;
-        return normalizeString(name).equalsIgnoreCase(normalizeString(song.name)) &&
-                normalizeString(artist).equalsIgnoreCase(normalizeString(song.artist));
+        return normalizeString(name).equalsIgnoreCase(normalizeString(song.name)) ;
+
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                normalizeString(name).toLowerCase(),
-                normalizeString(artist).toLowerCase()
+                normalizeString(name).toLowerCase()
+
         );
     }
     public Song(LocalDateTime addedTime, String genre, String lyrics, int releaseYear, File musicFile, String musicPath, int durationPlayed, String artist, String album, String name) {

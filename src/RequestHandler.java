@@ -255,14 +255,18 @@ public class RequestHandler {
                 }
                 break;
             }
-
+            case "removeuser" :
+                db.removeUser(user);
+                db.saveUsers();
+                break;
             case "AddToNava":
                 db.loadSongs();
                 Song songToGlobal = createSongFromData(data);
+
                 if (songToGlobal != null) {
                     db.addSong(songToGlobal);
                     db.saveSongs();
-                    response.setData("status", "song adddded to global");
+                    response.setData("status", "song adddded to global with count of likes "+songToGlobal.getCountOfLikes());
                 } else {
                     response.setStatus("error");
                     response.setData("message", "Song data is invalid.");
@@ -344,6 +348,7 @@ public class RequestHandler {
             case "addSongToPlaylist":
                 if (playlist != null) {
                     Song song = createSongFromData(data);
+
                     playlist.addSong(song);
                     if (!user.getSongs().contains(song)) {
                         user.getSongs().add(song);
@@ -375,15 +380,44 @@ public class RequestHandler {
                 break;
             case "likeSong":
                 Song songToLike = createSongFromData(data);
+
                 if (songToLike != null) {
-                    user.likeSong(songToLike);
-                    db.updateUser(user);
-                    response.setData("status", "song liked");
+                    boolean songFound = false;
+
+
+                    for (User u : db.getUsers()) {
+                        for (PlayList p : u.getPlaylists()) {
+                            int index = p.getSongs().indexOf(songToLike);
+                            if (index != -1) {
+                                Song existingSong = p.getSongs().get(index);
+
+                                if (songToLike.isLiked()) {
+                                    existingSong.setLiked(true);
+                                    existingSong.setCountOfLikes(existingSong.getCountOfLikes() + 1);
+                                } else {
+                                    existingSong.setLiked(false);
+                                    existingSong.setCountOfLikes(Math.max(0, existingSong.getCountOfLikes() - 1));
+                                }
+
+                                db.updateUser(u);
+                                songFound = true;
+                            }
+                        }
+                    }
+
+                    if (songFound) {
+                        response.setStatus("success");
+                        response.setData("status", "song liked");
+                    } else {
+                        response.setStatus("error");
+                        response.setData("message", "Song not found in any playlist");
+                    }
+
                 } else {
                     response.setStatus("error");
-                    response.setData("message", "Song is missing.");
-                    return response;
+                    response.setData("message", "Song data is invalid");
                 }
+
                 break;
             case "dislikeSong":
                 Song songToDislike = getSongFromData(data,  "song");
@@ -408,14 +442,33 @@ public class RequestHandler {
 
     private Song createSongFromData(Map<String, Object> data) {
         Song song = new Song();
+        Object likesValue = data.get("countOfLikes");
+        if (likesValue != null) {
+            if (likesValue instanceof Integer) {
+                song.setCountOfLikes((Integer) likesValue);
+            } else if (likesValue instanceof Long) {
+                song.setCountOfLikes(((Long) likesValue).intValue());
+            } else if (likesValue instanceof Double) {
+                song.setCountOfLikes(((Double) likesValue).intValue());
+            } else if (likesValue instanceof Float) {
+                song.setCountOfLikes(((Float) likesValue).intValue());
+            } else if (likesValue instanceof String) {
+                try {
+                    song.setCountOfLikes(Integer.parseInt((String) likesValue));
+                } catch (NumberFormatException e) {
+                    song.setCountOfLikes(0);
+                }
+            } else {
+                song.setCountOfLikes(0);
+            }
+        } else {
+            song.setCountOfLikes(0);
+        }
         song.setName((String) data.getOrDefault("name", ""));
         song.setArtist((String) data.getOrDefault("artist", ""));
         song.setBase64((String) data.getOrDefault("base64Audio", "salam"));
         song.setMusicPath((String) data.getOrDefault("musicPath", ""));
-        song.setReleaseYear((Double) data.getOrDefault("releaseYear", 0.0));
         song.setGenre((String) data.getOrDefault("genre", ""));
-        song.setLyrics((String) data.getOrDefault("lyrics", ""));
-        song.setDurationPlayed((Double) data.getOrDefault("durationPlayed", 0.0));
         song.setAlbum((String) data.getOrDefault("album", ""));
         song.setLiked((boolean) data.getOrDefault("isLiked", false));
         return song;

@@ -89,7 +89,7 @@ public class Database {
         return new ArrayList<>(songs);
     }
 
-    private synchronized void saveUsers() {
+    public synchronized void saveUsers() {
         try (FileWriter writer = new FileWriter(USERS_FILE)) {
             gson.toJson(users, writer);
         } catch (IOException e) {

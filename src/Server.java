@@ -41,6 +41,7 @@ public class Server {
                                 Response errorResponse = new Response();
                                 errorResponse.setStatus("error");
                                 errorResponse.setData("message", "Malformed request");
+                                System.out.println("malformed request");
                                 byte[] errBytes = gson.toJson(errorResponse).getBytes(StandardCharsets.UTF_8);
                                 dos.writeInt(errBytes.length);
                                 dos.write(errBytes);
