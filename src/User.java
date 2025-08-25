@@ -41,14 +41,16 @@ public class User {
         }
         this.username = username;
     }
-    public Song findsongbyname(String name,PlayList p){
-        for(Song s : p.getSongs()){
-            if(s.getName().equals(s)){
-                return s;
+ public Song validatesong(Song song ){
+        for (PlayList p : this.getPlaylists()){
+            for (Song S :p.getSongs()){
+                if (song.equals(S))
+                    return S;
             }
         }
-        return null;
-    }
+
+return null;
+ }
 
 
 

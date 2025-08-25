@@ -130,10 +130,8 @@ public class Admin extends JFrame {
             }
         }
 
-        // Sort by likes count (descending)
         allSongs.sort((s1, s2) -> Integer.compare(s2.getCountOfLikes(), s1.getCountOfLikes()));
 
-        // Return top N songs
         return allSongs.subList(0, Math.min(count, allSongs.size()));
     }
 

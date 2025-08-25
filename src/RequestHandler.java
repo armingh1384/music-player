@@ -164,6 +164,7 @@ public class RequestHandler {
 
                     songInfo.put("genre", s.getGenre());
                     songInfo.put("base64", s.getBase64());
+                    songInfo.put("countOfLikes",s.getCountOfLikes());
                     globalSongs.add(songInfo);
                 }
                 response.setStatus("success");
@@ -262,11 +263,12 @@ public class RequestHandler {
             case "AddToNava":
                 db.loadSongs();
                 Song songToGlobal = createSongFromData(data);
+                Song songg = user.validatesong(songToGlobal);
 
-                if (songToGlobal != null) {
-                    db.addSong(songToGlobal);
+                if (songg != null) {
+                    db.addSong(songg);
                     db.saveSongs();
-                    response.setData("status", "song adddded to global with count of likes "+songToGlobal.getCountOfLikes());
+                    response.setData("status", "song adddded to global with count of likes "+songg.getCountOfLikes());
                 } else {
                     response.setStatus("error");
                     response.setData("message", "Song data is invalid.");
@@ -400,6 +402,19 @@ public class RequestHandler {
                                 }
 
                                 db.updateUser(u);
+                                    for(Song S : db.getSongs()) {
+                                        if(S.equals(existingSong)){
+                                            if(songToLike.isLiked()){
+                                            S.setCountOfLikes(S.getCountOfLikes()+1);}
+                                            else{
+                                                S.setCountOfLikes(S.getCountOfLikes()-1);
+                                            }
+                                            break;
+                                        }
+
+                                    }
+
+                                        db.saveSongs();
                                 songFound = true;
                             }
                         }
